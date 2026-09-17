@@ -39,8 +39,7 @@ export default function AlbumPlayer() {
         album.tracks[0]?.duration ?? 0,
     );
     const [volume, setVolume] = useState(1);
-    const [autoplayNextSource, setAutoplayNextSource] =
-        useState(false);
+    const autoplayNextSourceRef = useRef(false);
     const [downloading, setDownloading] = useState<string | null>(
         null,
     );
@@ -79,15 +78,15 @@ export default function AlbumPlayer() {
         setCurrentTime(0);
         setDuration(currentTrack.duration || 0);
 
-        if (autoplayNextSource) {
+        if (autoplayNextSourceRef.current) {
             audio
                 .play()
                 .then(() => setPlaying(true))
                 .catch(() => setPlaying(false));
 
-            setAutoplayNextSource(false);
+            autoplayNextSourceRef.current = false;
         }
-    }, [currentIndex, currentTrack.duration, autoplayNextSource]);
+    }, [currentIndex, currentTrack.duration]);
 
     const togglePlayback = async () => {
         const audio = audioRef.current;
@@ -111,7 +110,7 @@ export default function AlbumPlayer() {
             return;
         }
 
-        setAutoplayNextSource(true);
+        autoplayNextSourceRef.current = true;
         setCurrentIndex(index);
     };
 
@@ -123,14 +122,14 @@ export default function AlbumPlayer() {
             return;
         }
 
-        setAutoplayNextSource(playing);
+        autoplayNextSourceRef.current = playing;
         setCurrentIndex((index) =>
             index === 0 ? album.tracks.length - 1 : index - 1,
         );
     };
 
     const nextTrack = () => {
-        setAutoplayNextSource(true);
+        autoplayNextSourceRef.current = true;
         setCurrentIndex((index) =>
             index === album.tracks.length - 1 ? 0 : index + 1,
         );
