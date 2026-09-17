@@ -199,7 +199,7 @@ export default function AlbumPlayer() {
     };
 
     return (
-        <main className="mx-auto min-h-screen max-w-5xl px-5 pb-36 pt-10 text-zinc-100">
+        <main className="mx-auto min-h-screen max-w-5xl px-5 pb-40 pt-10 text-zinc-100">
             <section className="grid gap-8 md:grid-cols-[320px_1fr]">
                 <div>
                     {coverUrl && (
@@ -260,12 +260,16 @@ export default function AlbumPlayer() {
                     return (
                         <div
                             key={track.file}
-                            className={`grid grid-cols-[44px_1fr_auto] items-center gap-3 border-b border-zinc-800 px-4 py-3 last:border-b-0 ${selected ? "bg-zinc-900" : "bg-zinc-950"
+                            onClick={() => void selectTrack(index)}
+                            className={`grid cursor-pointer grid-cols-[44px_1fr_auto] items-center gap-3 border-b border-zinc-800 px-4 py-3 last:border-b-0 ${selected ? "bg-zinc-900" : "bg-zinc-950"
                                 }`}
                         >
                             <button
                                 type="button"
-                                onClick={() => selectTrack(index)}
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    void selectTrack(index);
+                                }}
                                 className="h-9 w-9 rounded-full text-sm hover:bg-zinc-800"
                                 aria-label={`Play ${track.title}`}
                             >
@@ -287,7 +291,10 @@ export default function AlbumPlayer() {
 
                             <button
                                 type="button"
-                                onClick={() => void downloadTrack(track.file)}
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    void downloadTrack(track.file);
+                                }}
                                 disabled={!hasValidMediaBase || downloading === track.file}
                                 className="rounded-lg px-3 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-50"
                             >
@@ -327,7 +334,7 @@ export default function AlbumPlayer() {
                 />
             )}
 
-            <div className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-800 bg-zinc-950/95 px-4 py-4 backdrop-blur">
+            <div className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-800 bg-zinc-950/95 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4 backdrop-blur">
                 <div className="mx-auto flex max-w-5xl items-center gap-4">
                     <button
                         type="button"
