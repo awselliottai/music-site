@@ -105,7 +105,7 @@ const album = {
     year: firstTrack.year,
     notes: "",
     coverFile,
-    albumDownloadFile: `${albumSlug}.zip`,
+    albumDownloadFile: `summers-never-over-flac.zip`,
     tracks: tracks.map((track, index) => ({
         number:
             Number.isFinite(track.number) &&
