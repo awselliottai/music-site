@@ -260,16 +260,12 @@ export default function AlbumPlayer() {
                     return (
                         <div
                             key={track.file}
-                            onClick={() => void selectTrack(index)}
-                            className={`grid cursor-pointer grid-cols-[44px_1fr_auto] items-center gap-3 border-b border-zinc-800 px-4 py-3 last:border-b-0 ${selected ? "bg-zinc-900" : "bg-zinc-950"
+                            className={`grid grid-cols-[44px_1fr_auto] items-center gap-3 border-b border-zinc-800 px-4 py-3 last:border-b-0 ${selected ? "bg-zinc-900" : "bg-zinc-950"
                                 }`}
                         >
                             <button
                                 type="button"
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    void selectTrack(index);
-                                }}
+                                onClick={() => selectTrack(index)}
                                 className="h-9 w-9 rounded-full text-sm hover:bg-zinc-800"
                                 aria-label={`Play ${track.title}`}
                             >
@@ -291,10 +287,7 @@ export default function AlbumPlayer() {
 
                             <button
                                 type="button"
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    void downloadTrack(track.file);
-                                }}
+                                onClick={() => void downloadTrack(track.file)}
                                 disabled={!hasValidMediaBase || downloading === track.file}
                                 className="rounded-lg px-3 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-50"
                             >
