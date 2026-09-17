@@ -1,5 +1,6 @@
 import AlbumPlayer from "@/components/AlbumPlayer";
 import album from "@/data/album.json";
+import { getMediaBaseUrl } from "@/lib/media";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -27,17 +28,13 @@ export async function generateMetadata({
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-    const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
-
+    const mediaBase = getMediaBaseUrl();
     const validSiteUrl = siteUrl && /^https?:\/\/[^/]+(?:\/.*)?$/i.test(siteUrl)
         ? siteUrl
         : undefined;
-    const validMediaBase = mediaBase && /^https?:\/\/[^/]+(?:\/.*)?$/i.test(mediaBase)
-        ? mediaBase.replace(/\/$/, "")
-        : undefined;
 
-    const coverUrl = album.coverFile && validMediaBase
-        ? `${validMediaBase}/${encodeURIComponent(album.slug)}/${encodeURIComponent(album.coverFile)}`
+    const coverUrl = album.coverFile && mediaBase
+        ? `${mediaBase}/${encodeURIComponent(album.slug)}/${encodeURIComponent(album.coverFile)}`
         : undefined;
 
     const title = album.artist ? `${album.title} — ${album.artist}` : album.title;

@@ -1,15 +1,11 @@
 "use client";
 
 import album from "@/data/album.json";
+import { getMediaBaseUrl } from "@/lib/media";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-const configuredMediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL?.trim();
-const mediaBase = configuredMediaBase?.replace(/\/$/, "");
-const hasValidMediaBase = Boolean(
-    mediaBase &&
-    /^https?:\/\/[^/]+(?:\/.*)?$/i.test(mediaBase) &&
-    !mediaBase.includes("your-domain"),
-);
+const mediaBase = getMediaBaseUrl();
+const hasValidMediaBase = Boolean(mediaBase);
 
 function encodePathSegment(value: string) {
     return encodeURIComponent(value);
