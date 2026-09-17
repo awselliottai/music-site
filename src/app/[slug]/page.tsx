@@ -45,6 +45,8 @@ export async function generateMetadata({
     return {
         title,
         description,
+        authors: [{ name: album.artist }],
+        creator: album.artist,
         alternates: {
             ...(validSiteUrl
                 ? { canonical: `${validSiteUrl}/${album.slug}` }
@@ -52,6 +54,7 @@ export async function generateMetadata({
         },
         openGraph: {
             type: "music.album",
+            musicians: [album.artist],
             ...(validSiteUrl ? { url: `${validSiteUrl}/${album.slug}` } : {}),
             title,
             description,
@@ -71,6 +74,9 @@ export async function generateMetadata({
             title,
             description,
             images: coverUrl ? [coverUrl] : [],
+        },
+        other: {
+            "music:musician": album.artist,
         },
     };
 }

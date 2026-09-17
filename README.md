@@ -25,6 +25,7 @@ To regenerate the manifest from source audio, provide the source directory and o
 ALBUM_SOURCE_DIR="$HOME/Music/publish-album" \\
 ALBUM_SLUG=summers-never-over \\
 ALBUM_TITLE="Summer's Never Over" \\
+ALBUM_ARTIST="Young Lung" \\
 node scripts/build-album-manifest.mjs
 ```
 

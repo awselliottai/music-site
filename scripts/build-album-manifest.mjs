@@ -97,7 +97,11 @@ const album = {
         (albumSlug === "summers-never-over"
             ? "Summer's Never Over"
             : path.basename(sourceDirectory)),
-    artist: requestedArtist || firstTrack.albumArtist || firstTrack.artist || "",
+    artist:
+        requestedArtist ||
+        firstTrack.albumArtist ||
+        firstTrack.artist ||
+        (albumSlug === "summers-never-over" ? "Young Lung" : ""),
     year: firstTrack.year,
     notes: "",
     coverFile,
