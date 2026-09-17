@@ -1,0 +1,17 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": [
+          "https://music.cozy-coder.com",
+          "https://summers-never-over-media-player.vercel.app",
+          "http://localhost:3000"
+        ],
+        "methods": [
+          "GET",
+          "HEAD"
+        ]
+      }
+    }
+  ]
+}

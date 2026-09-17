@@ -310,7 +310,6 @@ export default function AlbumPlayer() {
                 <audio
                     ref={audioRef}
                     src={streamUrl}
-                    crossOrigin="anonymous"
                     preload="metadata"
                     onPlay={() => setPlaying(true)}
                     onPause={() => setPlaying(false)}
