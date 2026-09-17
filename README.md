@@ -1,4 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Configuration
+
+The album metadata lives in [`src/data/album.json`](src/data/album.json). The `slug` is the R2 release folder name (`summers-never-over`), while `title` and track `title` values are the human-facing names.
+
+Set the public URLs in `.env.local` and in the Vercel project settings:
+
+```text
+NEXT_PUBLIC_SITE_URL=https://music.your-domain.com
+NEXT_PUBLIC_MEDIA_BASE_URL=https://media.your-domain.com/releases
+```
+
+`NEXT_PUBLIC_MEDIA_BASE_URL` must be the Cloudflare R2 custom domain, including the `releases` prefix. The expected object paths are:
+
+```text
+releases/summers-never-over/01-dip.wav
+releases/summers-never-over/cover.jpg
+releases/summers-never-over/summers-never-over.zip
+```
+
+The R2 bucket must allow `GET` and `HEAD` from the site origin and localhost through its CORS policy. Audio objects should have an audio `Content-Type` such as `audio/wav`; the archive should use `application/zip` and `Content-Disposition: attachment`.
+
+To regenerate the manifest from source audio, provide the source directory and optional explicit metadata:
+
+```bash
+ALBUM_SOURCE_DIR="$HOME/Music/publish-album" \\
+ALBUM_SLUG=summers-never-over \\
+ALBUM_TITLE="Summer's Never Over" \\
+node scripts/build-album-manifest.mjs
+```
+
+## Getting Started
 
 ## Getting Started
 

@@ -4,6 +4,8 @@ import { parseFile } from "music-metadata";
 
 const sourceDirectory = process.env.ALBUM_SOURCE_DIR;
 const requestedSlug = process.env.ALBUM_SLUG;
+const requestedTitle = process.env.ALBUM_TITLE;
+const requestedArtist = process.env.ALBUM_ARTIST;
 
 if (!sourceDirectory) {
     throw new Error("ALBUM_SOURCE_DIR is required.");
@@ -15,6 +17,15 @@ const slugify = (value) =>
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
+
+const formatTrackTitle = (file) =>
+    path
+        .basename(file, path.extname(file))
+        .replace(/^\d{1,3}[-_. ]*/, "")
+        .replace(/[-_]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 const albumSlug =
     requestedSlug || slugify(path.basename(path.resolve(sourceDirectory)));
@@ -45,9 +56,7 @@ const tracks = await Promise.all(
         return {
             file,
             number: metadata.common.track.no ?? Number.MAX_SAFE_INTEGER,
-            title:
-                metadata.common.title ??
-                path.basename(file, path.extname(file)),
+            title: metadata.common.title?.trim() || formatTrackTitle(file),
             artist: metadata.common.artist ?? "",
             albumArtist: metadata.common.albumartist ?? "",
             album: metadata.common.album ?? "",
@@ -82,11 +91,13 @@ const coverFile = directoryEntries.some(
 
 const album = {
     slug: albumSlug,
-    title: firstTrack.album || path.basename(sourceDirectory),
-    artist:
-        firstTrack.albumArtist ||
-        firstTrack.artist ||
-        "",
+    title:
+        requestedTitle ||
+        firstTrack.album?.trim() ||
+        (albumSlug === "summers-never-over"
+            ? "Summer's Never Over"
+            : path.basename(sourceDirectory)),
+    artist: requestedArtist || firstTrack.albumArtist || firstTrack.artist || "",
     year: firstTrack.year,
     notes: "",
     coverFile,

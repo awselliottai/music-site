@@ -26,20 +26,21 @@ export async function generateMetadata({
         return {};
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
     const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
-    if (!siteUrl || !mediaBase) {
-        throw new Error(
-            "NEXT_PUBLIC_SITE_URL and NEXT_PUBLIC_MEDIA_BASE_URL are required.",
-        );
-    }
-
-    const coverUrl = album.coverFile
-        ? `${mediaBase}/${encodeURIComponent(album.slug)}/${encodeURIComponent(album.coverFile)}`
+    const validSiteUrl = siteUrl && /^https?:\/\/[^/]+(?:\/.*)?$/i.test(siteUrl)
+        ? siteUrl
+        : undefined;
+    const validMediaBase = mediaBase && /^https?:\/\/[^/]+(?:\/.*)?$/i.test(mediaBase)
+        ? mediaBase.replace(/\/$/, "")
         : undefined;
 
-    const title = `${album.title} — ${album.artist}`;
+    const coverUrl = album.coverFile && validMediaBase
+        ? `${validMediaBase}/${encodeURIComponent(album.slug)}/${encodeURIComponent(album.coverFile)}`
+        : undefined;
+
+    const title = album.artist ? `${album.title} — ${album.artist}` : album.title;
     const description = album.notes
         ? album.notes.slice(0, 200)
         : `Listen to ${album.title} by ${album.artist}.`;
@@ -48,11 +49,13 @@ export async function generateMetadata({
         title,
         description,
         alternates: {
-            canonical: `${siteUrl}/${album.slug}`,
+            ...(validSiteUrl
+                ? { canonical: `${validSiteUrl}/${album.slug}` }
+                : {}),
         },
         openGraph: {
             type: "music.album",
-            url: `${siteUrl}/${album.slug}`,
+            ...(validSiteUrl ? { url: `${validSiteUrl}/${album.slug}` } : {}),
             title,
             description,
             images: coverUrl

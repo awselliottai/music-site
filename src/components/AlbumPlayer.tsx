@@ -3,17 +3,23 @@
 import album from "@/data/album.json";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
-
-if (!mediaBase) {
-    throw new Error("NEXT_PUBLIC_MEDIA_BASE_URL is not configured.");
-}
+const configuredMediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL?.trim();
+const mediaBase = configuredMediaBase?.replace(/\/$/, "");
+const hasValidMediaBase = Boolean(
+    mediaBase &&
+    /^https?:\/\/[^/]+(?:\/.*)?$/i.test(mediaBase) &&
+    !mediaBase.includes("your-domain"),
+);
 
 function encodePathSegment(value: string) {
     return encodeURIComponent(value);
 }
 
 function mediaUrl(file: string) {
+    if (!hasValidMediaBase || !mediaBase) {
+        return null;
+    }
+
     return `${mediaBase}/${encodePathSegment(album.slug)}/${encodePathSegment(file)}`;
 }
 
@@ -39,6 +45,8 @@ export default function AlbumPlayer() {
         album.tracks[0]?.duration ?? 0,
     );
     const [volume, setVolume] = useState(1);
+    const [playbackError, setPlaybackError] = useState<string | null>(null);
+    const [downloadError, setDownloadError] = useState<string | null>(null);
     const autoplayNextSourceRef = useRef(false);
     const [downloading, setDownloading] = useState<string | null>(
         null,
@@ -74,15 +82,18 @@ export default function AlbumPlayer() {
             return;
         }
 
+        setPlaybackError(null);
         audio.load();
         setCurrentTime(0);
         setDuration(currentTrack.duration || 0);
 
         if (autoplayNextSourceRef.current) {
-            audio
-                .play()
+            audio.play()
                 .then(() => setPlaying(true))
-                .catch(() => setPlaying(false));
+                .catch(() => {
+                    setPlaying(false);
+                    setPlaybackError("This track could not be played.");
+                });
 
             autoplayNextSourceRef.current = false;
         }
@@ -96,8 +107,14 @@ export default function AlbumPlayer() {
         }
 
         if (audio.paused) {
-            await audio.play();
-            setPlaying(true);
+            try {
+                setPlaybackError(null);
+                await audio.play();
+                setPlaying(true);
+            } catch {
+                setPlaying(false);
+                setPlaybackError("This track could not be played. Check the media URL and R2 object.");
+            }
         } else {
             audio.pause();
             setPlaying(false);
@@ -149,8 +166,14 @@ export default function AlbumPlayer() {
     const downloadTrack = async (file: string) => {
         try {
             setDownloading(file);
+            setDownloadError(null);
 
-            const response = await fetch(mediaUrl(file));
+            const url = mediaUrl(file);
+            if (!url) {
+                throw new Error("Media URL is not configured.");
+            }
+
+            const response = await fetch(url);
 
             if (!response.ok) {
                 throw new Error(
@@ -172,6 +195,8 @@ export default function AlbumPlayer() {
             window.setTimeout(() => {
                 URL.revokeObjectURL(objectUrl);
             }, 1000);
+        } catch {
+            setDownloadError("This download could not be started. Check the media URL and R2 object.");
         } finally {
             setDownloading(null);
         }
@@ -211,13 +236,26 @@ export default function AlbumPlayer() {
                     )}
 
                     <a
-                        href={albumDownloadUrl}
+                        href={albumDownloadUrl ?? undefined}
+                        aria-disabled={!albumDownloadUrl}
                         className="mt-7 w-fit rounded-full border border-zinc-600 px-5 py-2.5 text-sm font-medium transition hover:border-zinc-300 hover:bg-zinc-800"
                     >
                         Download Album
                     </a>
                 </div>
             </section>
+
+            {!hasValidMediaBase && (
+                <p className="mt-6 rounded-lg border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">
+                    Audio is unavailable until NEXT_PUBLIC_MEDIA_BASE_URL is set to your Cloudflare R2 custom domain.
+                </p>
+            )}
+
+            {playbackError && (
+                <p role="alert" className="mt-6 rounded-lg border border-red-900/60 bg-red-950/30 px-4 py-3 text-sm text-red-200">
+                    {playbackError}
+                </p>
+            )}
 
             <section className="mt-12 overflow-hidden rounded-xl border border-zinc-800">
                 {album.tracks.map((track, index) => {
@@ -253,8 +291,8 @@ export default function AlbumPlayer() {
 
                             <button
                                 type="button"
-                                onClick={() => downloadTrack(track.file)}
-                                disabled={downloading === track.file}
+                                onClick={() => void downloadTrack(track.file)}
+                                disabled={!hasValidMediaBase || downloading === track.file}
                                 className="rounded-lg px-3 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-50"
                             >
                                 {downloading === track.file
@@ -266,21 +304,33 @@ export default function AlbumPlayer() {
                 })}
             </section>
 
-            <audio
-                ref={audioRef}
-                src={streamUrl}
-                crossOrigin="anonymous"
-                preload="metadata"
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                onEnded={nextTrack}
-                onTimeUpdate={(event) =>
-                    setCurrentTime(event.currentTarget.currentTime)
-                }
-                onLoadedMetadata={(event) =>
-                    setDuration(event.currentTarget.duration)
-                }
-            />
+            {downloadError && (
+                <p role="alert" className="mt-4 text-sm text-red-300">
+                    {downloadError}
+                </p>
+            )}
+
+            {streamUrl && (
+                <audio
+                    ref={audioRef}
+                    src={streamUrl}
+                    crossOrigin="anonymous"
+                    preload="metadata"
+                    onPlay={() => setPlaying(true)}
+                    onPause={() => setPlaying(false)}
+                    onError={() => {
+                        setPlaying(false);
+                        setPlaybackError("This track could not be loaded. Check its R2 object and Content-Type.");
+                    }}
+                    onEnded={nextTrack}
+                    onTimeUpdate={(event) =>
+                        setCurrentTime(event.currentTarget.currentTime)
+                    }
+                    onLoadedMetadata={(event) =>
+                        setDuration(event.currentTarget.duration)
+                    }
+                />
+            )}
 
             <div className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-800 bg-zinc-950/95 px-4 py-4 backdrop-blur">
                 <div className="mx-auto flex max-w-5xl items-center gap-4">
